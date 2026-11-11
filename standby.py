@@ -30,7 +30,7 @@ def out(k, v):
 def check():
     now = datetime.datetime.now(datetime.timezone.utc); age = primary_age(); st = load()
     st['primary_age_min'] = round(age, 1); st['checked'] = now.strftime('%F %T'); json.dump(st, open(STATE, 'w'))
-    go = age > STALE_MIN and market_open(now)
+    go = (age > STALE_MIN or os.path.exists('force.txt')) and market_open(now)
     out('run', 'true' if go else 'false')
 def equiti_price():
     from playwright.sync_api import sync_playwright
