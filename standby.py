@@ -36,9 +36,9 @@ def equiti_price():
     from playwright.sync_api import sync_playwright
     with sync_playwright() as p:
         br = p.chromium.launch()
-        for url, rx, name in [('https://www.tradingview.com/symbols/XAUUSD/?exchange=EQUITI', r'Equiti\s*\|\s*([\d,]+\.\d+)', 'Equiti'),
-                              ('https://www.tradingview.com/symbols/XAUUSD/?exchange=OANDA', r'OANDA\s*\|\s*([\d,]+\.\d+)', 'OANDA'),
-                              ('https://www.tradingview.com/symbols/XAUUSD/?exchange=FXCM', r'FXCM\s*\|\s*([\d,]+\.\d+)', 'FXCM')]:
+        for url, rx, name in [('https://www.tradingview.com/symbols/XAUUSD/?exchange=EQUITI', r'Equiti\W{0,8}([\d,]+\.\d+)', 'Equiti'),
+                              ('https://www.tradingview.com/symbols/XAUUSD/?exchange=OANDA', r'OANDA\W{0,8}([\d,]+\.\d+)', 'OANDA'),
+                              ('https://www.tradingview.com/symbols/XAUUSD/?exchange=FXCM', r'FXCM\W{0,8}([\d,]+\.\d+)', 'FXCM')]:
             try:
                 pg = br.new_page(); pg.goto(url, wait_until='domcontentloaded', timeout=45000); pg.wait_for_timeout(8000)
                 m = re.search(rx, pg.inner_text('body'))
@@ -60,7 +60,8 @@ def alert(text, click=''):
 def run():
     st = load(); now = time.time()
     px, src = equiti_price()
-    if px is None: print('no price source'); return
+    if px is None:
+        st.update(ran=time.strftime('%F %T', time.gmtime()), error='no price source'); json.dump(st, open(STATE, 'w'), indent=1); print('no price source'); return
     try:
         bars = yahoo_bars(); basis = px - bars[-1][3]
         since = max(st.get('last_ts', 0), now - 3 * 3600)
